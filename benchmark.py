@@ -5,6 +5,7 @@ import pandas as pd
 from sklearn.cross_validation import train_test_split
 from sklearn.metrics import roc_curve, auc
 import matplotlib.pyplot as plt
+from sklearn.linear_model import LogisticRegression
 
 
 from sklearn.svm import SVC
@@ -43,7 +44,6 @@ def logisticre_score(x,y):
     print "Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2)
 
 def plot_ligistic_roc():
-    from sklearn.linear_model import LogisticRegression
     lg = LogisticRegression(C=1.0, penalty='l2')
     x,y = get_x_y()
     x_train, x_test, y_train, y_test = get_train_test_sets(x,y)
@@ -61,12 +61,18 @@ def get_auc(y, y_score):
 
 def get_cross_auc(x,y):
     '''
-    c=1.0, penalty=l2, 0.50193326693284135
+    c=1.0, penalty=l2, 0.50193326693284135, tol=0.0001
+    c=1.0, penalty=l2, 0.50193326693284135, tol=0.001
+
+    0.61699687410891468 0.59 {0:.85,1:.15}
+    0.61836825147132168 0.609{0:.91,
     '''
+
+
     from sklearn.cross_validation import KFold
     kf = KFold(n=len(x), n_folds=5, shuffle=False)
     from sklearn.linear_model import LogisticRegression
-    lg = LogisticRegression(C=1.0, penalty='l1')
+    lg = LogisticRegression(C=1.0, penalty='l2', tol=0.001, class_weight={0:.91,1:0.09})
     auc_list = []
     for train_index, test_index in kf:
         x_train = x.ix[train_index]
@@ -95,6 +101,17 @@ def plot_roc(y, y_score, pos_label=None):
     plt.legend(loc='lower right')
     plt.show()
 
+def get_result_rsv():
+    x, y = get_x_y()
+    lg = LogisticRegression(C=1.0, penalty='l2', tol=0.001, class_weight={0:.91,1:0.09})
+    lg.fit(x,y)
+    test_df = pd.read_csv('test_x.csv')
+    test_x = test_df[test_df.columns[1:]]
+    p = lg.predict_proba(test_x)
+    p1 = p[:,1]
+    test_df['y'] = p1
+    rsv_df = test_df[['uid', 'y']]
+    rsv_df.to_csv('rsv.csv', index=False, header=['uid','score'])
     
 if __name__ == '__main__':
     x,y = get_x_y()
