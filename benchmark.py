@@ -59,7 +59,7 @@ def get_auc(y, y_score):
     
     return auc(fpr, tpr)
 
-def get_cross_auc(x,y):
+def get_cross_rf_auc(x,y):
     '''
     c=1.0, penalty=l2, 0.50193326693284135, tol=0.0001
     c=1.0, penalty=l2, 0.50193326693284135, tol=0.001
@@ -71,8 +71,46 @@ def get_cross_auc(x,y):
 
     from sklearn.cross_validation import KFold
     kf = KFold(n=len(x), n_folds=5, shuffle=False)
+    from sklearn.ensemble import RandomForestClassifier
+    clf = RandomForestClassifier(n_estimators=40, n_jobs=-1, class_weight={1:0.2,0:0.8})
+    auc_list = []
+    for train_index, test_index in kf:
+        x_train = x.ix[train_index]
+        y_train = y.ix[train_index]
+        x_test = x.ix[test_index]
+        y_test = y.ix[test_index]
+        clf.fit(x_train, y_train)
+        r = clf.predict_proba(x_test)
+        fpr, tpr, _ =  roc_curve(y_test, r[:,1], 1)
+        auc_list.append(auc(fpr, tpr))
+
+    return sum(auc_list)/len(auc_list)
+
+
+
+#########################
+
+
+def get_cross_lg_auc(x,y):
+    '''
+    c=1.0, penalty=l2, 0.50193326693284135, tol=0.0001
+    c=1.0, penalty=l2, 0.50193326693284135, tol=0.001
+
+    0.61699687410891468 0.59 {0:.85,1:.15}
+    0.61836825147132168 0.609{0:.91,
+    0.64 l1
+    '''
+
+
+    from sklearn.cross_validation import KFold
+    
+    kf = KFold(n=len(x), n_folds=5, shuffle=False)
+
+
     from sklearn.linear_model import LogisticRegression
-    lg = LogisticRegression(C=1.0, penalty='l2', tol=0.001, class_weight={0:.91,1:0.09})
+
+    lg = LogisticRegression(C=0.5, penalty='l2', tol=0.001, class_weight={0:.91,1:0.09})
+
     auc_list = []
     for train_index, test_index in kf:
         x_train = x.ix[train_index]
@@ -85,6 +123,7 @@ def get_cross_auc(x,y):
         auc_list.append(auc(fpr, tpr))
 
     return sum(auc_list)/len(auc_list)
+
 
 
 def plot_roc(y, y_score, pos_label=None):
@@ -102,16 +141,24 @@ def plot_roc(y, y_score, pos_label=None):
     plt.show()
 
 def get_result_rsv():
+
     x, y = get_x_y()
-    lg = LogisticRegression(C=1.0, penalty='l2', tol=0.001, class_weight={0:.91,1:0.09})
+    #lg = LogisticRegression(C=1.0, penalty='l2', tol=0.001, class_weight={0:.91,1:0.09})
+    lg  = LogisticRegressin(C=1.0)
     lg.fit(x,y)
+    
+
+
     test_df = pd.read_csv('test_x.csv')
     test_x = test_df[test_df.columns[1:]]
+
     p = lg.predict_proba(test_x)
     p1 = p[:,1]
     test_df['y'] = p1
     rsv_df = test_df[['uid', 'y']]
     rsv_df.to_csv('rsv.csv', index=False, header=['uid','score'])
+
+
     
 if __name__ == '__main__':
     x,y = get_x_y()
