@@ -99,6 +99,8 @@ def get_cross_lg_auc(x,y):
     0.61699687410891468 0.59 {0:.85,1:.15}
     0.61836825147132168 0.609{0:.91,
     0.64 l1
+
+    0.64019752557028209  C=3.5
     '''
 
 
@@ -109,7 +111,7 @@ def get_cross_lg_auc(x,y):
 
     from sklearn.linear_model import LogisticRegression
 
-    lg = LogisticRegression(C=0.5, penalty='l2', tol=0.001, class_weight={0:.91,1:0.09})
+    lg = LogisticRegression(C=3.5, penalty='l1', tol=0.001, class_weight={0:.91,1:0.09})
 
     auc_list = []
     for train_index, test_index in kf:
@@ -144,10 +146,10 @@ def get_result_rsv():
 
     x, y = get_x_y()
     #lg = LogisticRegression(C=1.0, penalty='l2', tol=0.001, class_weight={0:.91,1:0.09})
-    lg  = LogisticRegressin(C=1.0)
+    #lg  = LogisticRegressin(C=1.0)
+    lg = LogisticRegression(C=3.5, penalty='l2', tol=0.001, class_weight={0:.91,1:0.09})
     lg.fit(x,y)
     
-
 
     test_df = pd.read_csv('test_x.csv')
     test_x = test_df[test_df.columns[1:]]
@@ -161,7 +163,9 @@ def get_result_rsv():
 
     
 if __name__ == '__main__':
-    x,y = get_x_y()
+    pass
+
+    #x,y = get_x_y()
     #svm_score(x,y)
     #logisticre_score(x,y)
 
