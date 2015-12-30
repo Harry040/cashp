@@ -1,10 +1,12 @@
 
 import numpy as np
-from sklearn.cross_validation import cross_val_score
+#from sklearn.cross_validation import cross_val_score
 import pandas as pd
 from sklearn.cross_validation import train_test_split
+import time
 from sklearn.metrics import roc_curve, auc
 import matplotlib.pyplot as plt
+from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 
 
@@ -72,7 +74,7 @@ def get_cross_rf_auc(x,y):
     from sklearn.cross_validation import KFold
     kf = KFold(n=len(x), n_folds=5, shuffle=False)
     from sklearn.ensemble import RandomForestClassifier
-    clf = RandomForestClassifier(n_estimators=40, n_jobs=-1, class_weight={1:0.2,0:0.8})
+    clf = RandomForestClassifier(n_estimators=500, n_jobs=-1, class_weight={1:0.2,0:0.8})
     auc_list = []
     for train_index, test_index in kf:
         x_train = x.ix[train_index]
@@ -89,6 +91,30 @@ def get_cross_rf_auc(x,y):
 
 
 #########################
+def get_cross_gbm_auc(x,y):
+    '''
+    '''
+
+
+    from sklearn.cross_validation import KFold
+    
+    kf = KFold(n=len(x), n_folds=10, shuffle=False)
+
+    clf = GradientBoostingClassifier(n_estimators=250, learning_rate=1.0,max_depth=10, random_state=0)
+    auc_list = []
+    for train_index, test_index in kf:
+        x_train = x.ix[train_index]
+        y_train = y.ix[train_index]
+        x_test = x.ix[test_index]
+        y_test = y.ix[test_index]
+        clf.fit(x_train, y_train)
+        r = clf.predict_proba(x_test)
+        fpr, tpr, _ =  roc_curve(y_test, r[:,1], 1)
+        auc_list.append(auc(fpr, tpr))
+
+    return sum(auc_list)/len(auc_list)
+
+
 
 
 def get_cross_lg_auc(x,y):
@@ -111,7 +137,7 @@ def get_cross_lg_auc(x,y):
 
     from sklearn.linear_model import LogisticRegression
 
-    lg = LogisticRegression(C=3.5, penalty='l1', tol=0.001, class_weight={0:.91,1:0.09})
+    lg = LogisticRegression(C=3.5, penalty='l2', tol=0.001, class_weight={0:.91,1:0.09})
 
     auc_list = []
     for train_index, test_index in kf:
@@ -160,12 +186,25 @@ def get_result_rsv():
     rsv_df = test_df[['uid', 'y']]
     rsv_df.to_csv('rsv.csv', index=False, header=['uid','score'])
 
-
-    
-if __name__ == '__main__':
+def diff_feature(x):
     pass
 
-    #x,y = get_x_y()
+def dumplicated(x):
+    max = x.max().apply(lambda e: '%.5f'%e)
+    min = x.min().apply(lambda e: '%.5f'%e)
+    mean = x.mean().apply(lambda e: '%.5f'%e)
+    std = x.std().apply(lambda e: '%.5f'%e)
+    s = max + min + mean + std
+    return s
+if __name__ == '__main__':
+    pass
+    x,y = get_x_y()
+    print 'gbm'
+    s = time.time()
+    print get_cross_gbm_auc(x,y)
+    print 'time',(time.time()-s)/60.
+
+
     #svm_score(x,y)
     #logisticre_score(x,y)
 
