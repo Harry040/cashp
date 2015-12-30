@@ -100,7 +100,7 @@ def get_cross_gbm_auc(x,y):
     
     kf = KFold(n=len(x), n_folds=10, shuffle=False)
 
-    clf = GradientBoostingClassifier(n_estimators=250, learning_rate=1.0,max_depth=10, random_state=0)
+    clf = GradientBoostingClassifier(n_estimators=500, learning_rate=1.0,max_depth=10, random_state=0)
     auc_list = []
     for train_index, test_index in kf:
         x_train = x.ix[train_index]
