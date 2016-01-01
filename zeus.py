@@ -2,6 +2,8 @@ import benchmark
 import pandas as pd
 from sklearn import preprocessing
 from sklearn.feature_selection import f_classif
+from sklearn.feature_selection import SelectKBest
+
 
 
 def z_score_scale(x, do_dummy=False):
@@ -73,8 +75,16 @@ def get_high_corr_features(x):
     for e in new_rsv:
         f = e[0]+'_'+e[1]
         diff[f] = df[e[0]] - df[e[1]]
-
     return diff
+
+
+def get_k_best(x,y, k=300):
+    '''
+    return k features name
+    '''
+    sk = SelectKBest(f_classif, k=300)
+    sk.fit_transform(x,y)
+    return x.columns[sk.get_support()]
 
 if __name__ == '__main__':
     pass
